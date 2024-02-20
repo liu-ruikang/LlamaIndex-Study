@@ -1,7 +1,7 @@
 # LlamaIndex-Study
 LlamaIndex study note.
 
-# 1_LlamaIndex概述
+# 1_LlamaIndex入门
 LlamaIndex是一个数据框架，旨在帮助开发者通过大型语言模型（LLM）来摄取、构建和访问私有或特定领域的数据。它允许用户将外部数据源与LLM相结合，以便在处理文本数据时获得更好的性能和效率。
 
 该框架的核心组件包括数据连接器、数据指标、引擎、数据代理、应用程序集成。数据连接器负责从多种原生数据源中读取数据，如API、PDF文件、SQL数据库等。一旦数据被连接器获取，接下来就是构建索引的过程，这涉及到将数据转换为一种中间表示形式，这种形式既便于LLMs处理，又能保持高效的性能。
@@ -16,3 +16,9 @@ LlamaIndex为开发者提供了一个强大而灵活的工具集，使他们能�
 * 创建了"llama-index-core"包
 * 将所有集成(integrations)和模板(templates)拆分为单独的包，更加解耦、干净且不易损坏
 * 弃用ServiceContext
+
+# 2_LlamaIndex高级
+## 检索增强生成 (RAG) 
+![image](https://github.com/txjlrk/LlamaIndex-Study/assets/8086669/6bb120da-e052-4297-b1ca-b690ff2fb644)
+RAG 的主要用途是为了给生成式 AI 输出的文本提供支撑。
+换言之，RAG 就是通过事实、自定义数据以减少 LLM 幻觉。具体而言，在 RAG 中，我们可以使用可靠、可信的自定义数据文本，如产品文档，随后从向量数据库中检索相似结果。然后，将准确的文本答案作为“上下文”和“问题”一起插入到“Prompt”中，并将其输入到诸如 OpenAI 的 ChatGPT 之类的 LLM 中。最终，LLM 生成一个基于事实的聊天答案。

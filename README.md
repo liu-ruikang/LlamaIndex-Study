@@ -12,10 +12,33 @@ LlamaIndex支持多种索引类型，包括向量索引、列表索引和树形�
 
 LlamaIndex为开发者提供了一个强大而灵活的工具集，使他们能够利用大型语言模型的强大功能来构建和处理各种自然语言处理应用程序。
 
-## v0.10最大的变化：
-* 创建了"llama-index-core"包
+## v0.10最大的变化（v0.10版本大概200万行代码）：
+* 创建了"llama-index-core"包，这个包包含了所有的核心抽象
 * 将所有集成(integrations)和模板(templates)拆分为单独的包，更加解耦、干净且不易损坏
-* 弃用ServiceContext
+* 弃用ServiceContext，它笨重且不透明，不知道默认参数是什么
+* 其他分离的包：
+  - llama-index-integrations（集成的所有第三方包）
+  - llama-index-finetuning（微调）
+  - llama-index-experimental
+  - llama-index-cli（LlamaIndex工具）
+  - llama-index-legacy（v0.9的代码都在这个包里，以防用错）
+  - llama-index-packs
+ 
+## 文件夹结构
+LlamaIndex的文件夹结构比较独特
+
+## LlamaIndex生态系统（ecosystem）
+* 150+ data loaders
+* 35+ agent tools
+* 50+ LlamaPack templates
+* 50+ LLMs
+* 25+ embeddings
+* 40+ vector stores
+
+但是，也有一些痛点，比如所有的集成都缺乏正确的测试，这些集成都被纳入了主包，依赖项中的任何更新，您都必须更新版本
+
+## "llama-index-core"包
+
 
 # 2_LlamaIndex高级
 ## 检索增强生成 (RAG) 

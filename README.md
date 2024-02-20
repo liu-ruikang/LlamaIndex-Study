@@ -12,7 +12,7 @@ LlamaIndex支持多种索引类型，包括向量索引、列表索引和树形�
 
 LlamaIndex为开发者提供了一个强大而灵活的工具集，使他们能够利用大型语言模型的强大功能来构建和处理各种自然语言处理应用程序。
 
-v0.10最大的变化：
+## v0.10最大的变化：
 * 创建了"llama-index-core"包
 * 将所有集成(integrations)和模板(templates)拆分为单独的包，更加解耦、干净且不易损坏
 * 弃用ServiceContext

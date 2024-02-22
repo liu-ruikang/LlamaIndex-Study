@@ -13,19 +13,33 @@ LlamaIndex支持多种索引类型，包括向量索引、列表索引和树形�
 LlamaIndex为开发者提供了一个强大而灵活的工具集，使他们能够利用大型语言模型的强大功能来构建和处理各种自然语言处理应用程序。
 
 ## v0.10最大的变化（v0.10版本大概200万行代码）
-* 创建了"llama-index-core"包，这个包包含了所有的核心抽象
+* 创建了"llama-index-core"包，此文件夹包含所有核心 LlamaIndex 抽象
 * 将所有集成(integrations)和模板(templates)拆分为单独的包，更加解耦、干净且不易损坏
 * 弃用ServiceContext，它笨重且不透明，不知道默认参数是什么
 * 其他分离的包：
-  - llama-index-integrations（集成的所有第三方包）
-  - llama-index-finetuning（微调）
-  - llama-index-experimental
+  - llama-index-core（此文件夹包含所有核心 LlamaIndex 抽象）
+  - llama-index-integrations（此文件夹包含 19 个 LlamaIndex 抽象的第三方集成。这包括数据加载器、LLM、嵌入模型、向量存储等）
+  - llama-index-finetuning（包含 LlamaIndex 微调抽象。这些仍然是相对实验性的）
+  - llama-index-experimental（包含实验性功能。目前基本上未使用（外部参数调整））
   - llama-index-cli（LlamaIndex工具）
-  - llama-index-legacy（v0.9的代码都在这个包里，以防用错）
-  - llama-index-packs
- 
+  - llama-index-legacy（包含旧版 LlamaIndex 代码，以防用错）
+  - llama-index-packs（此文件夹包含我们的 50 多个 LlamaPack，这些模板旨在启动用户的应用程序）
+
 ## 文件夹结构
-LlamaIndex的文件夹结构比较独特，在导入时保留了LlamaIndex的namespace
+LlamaIndex的文件夹结构比较独特，在导入时保留了LlamaIndex的namespace。
+integrations和中的子目录packs代表各个包。文件夹的名称与包名称相对应。例如llama-index-integrations/llms/llama-index-llms-gemini对应llama-index-llms-geminiPyPI包。
+在每个包文件夹中，源文件排列在您用于导入它们的相同路径中。例如，在 Gemini LLM 包中，您将看到一个名为 的文件夹，其中llama_index/llms/gemini包含源文件。此文件夹结构允许您在导入期间保留顶级llama_index命名空间。对于 Gemini LLM，您可以 pip 安装llama-index-llms-gemini，然后使用from llama_index.llms.gemini import Gemini
+这些子文件夹中的每一个还具有打包所需的资源：pyproject.toml、poetry.lock和 a Makefile，以及自动创建包的脚本。
+
+## 集成
+所有第三方集成现在都在llama-index-integrations.这里有 19 个文件夹。主要集成类别有：
+* llms
+* embeddings
+* multi_modal_llms
+* readers
+* tools
+* vector_stores
+为了完整起见，这里列出了所有其他类别：agent, callbacks, evaluation, extractors, graph_stores, indices, output_parsers, postprocessor, program, question_gen, response_synthesizers, retrievers, storage, tools。
 
 ## LlamaIndex生态系统（ecosystem）
 * 150+ data loaders

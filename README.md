@@ -211,3 +211,95 @@ Generated 3 sub questions.
 [pg_essay] A: During his time at YC, Paul Graham worked on various projects. He wrote all of YC's internal software in Arc and also worked on Hacker News (HN), which was a news aggregator initially meant for startup founders but later changed to engage intellectual curiosity. Additionally, he wrote essays and worked on helping the startups in the YC program with their problems.
 [pg_essay] A: Paul Graham worked on writing essays and working on YC before YC.
 ```
+## Finetune Embeddings微调嵌入带来的性能提升
+我们可以使用LlamaIndex的generate_qa_embedding_pairs把数据集存储到EmbeddingQAFinetuneDataset
+```
+# 生成语料库
+from llama_index.finetuning import generate_qa_embedding_pairs
+from llama_index.core.evaluation import EmbeddingQAFinetuneDataset
+from llama_index.llms.openai import OpenAI
+
+train_dataset = generate_qa_embedding_pairs(
+    llm=OpenAI(model="gpt-3.5-turbo"), nodes=train_nodes
+)
+val_dataset = generate_qa_embedding_pairs(
+    llm=OpenAI(model="gpt-3.5-turbo"), nodes=val_nodes
+)
+
+train_dataset.save_json("train_dataset.json")
+val_dataset.save_json("val_dataset.json")
+
+# 加载数据
+train_dataset = EmbeddingQAFinetuneDataset.from_json("train_dataset.json")
+val_dataset = EmbeddingQAFinetuneDataset.from_json("val_dataset.json")
+
+from llama_index.finetuning import SentenceTransformersFinetuneEngine
+finetune_engine = SentenceTransformersFinetuneEngine(
+    train_dataset,
+    model_id="BAAI/bge-small-en",
+    model_output_path="llm_model_ft",
+    val_dataset=val_dataset,
+)
+finetune_engine.finetune()
+embed_model = finetune_engine.get_finetuned_model()
+
+# 评估器
+from sentence_transformers.evaluation import InformationRetrievalEvaluator
+from sentence_transformers import SentenceTransformer
+from pathlib import Path
+
+
+def evaluate_st(
+    dataset,
+    model_id,
+    name,
+):
+    corpus = dataset.corpus
+    queries = dataset.queries
+    relevant_docs = dataset.relevant_docs
+
+    evaluator = InformationRetrievalEvaluator(
+        queries, corpus, relevant_docs, name=name
+    )
+    model = SentenceTransformer(model_id)
+    output_path = "results/"
+    Path(output_path).mkdir(exist_ok=True, parents=True)
+    return evaluator(model, output_path=output_path)
+
+# 运行评估
+ada = OpenAIEmbedding()
+ada_val_results = evaluate(val_dataset, ada)
+df_ada = pd.DataFrame(ada_val_results)
+hit_rate_ada = df_ada["is_hit"].mean()
+hit_rate_ada
+0.8779904306220095
+
+bge = "local:BAAI/bge-small-en"
+bge_val_results = evaluate(val_dataset, bge)
+df_bge = pd.DataFrame(bge_val_results)
+hit_rate_bge = df_bge["is_hit"].mean()
+hit_rate_bge
+0.7930622009569378
+
+# Finetuned
+finetuned = "local:llm_model_ft"
+val_results_finetuned = evaluate(val_dataset, finetuned)
+df_finetuned = pd.DataFrame(val_results_finetuned)
+hit_rate_finetuned = df_finetuned["is_hit"].mean()
+hit_rate_finetuned
+evaluate_st(val_dataset, "llm_model_ft", name="finetuned")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

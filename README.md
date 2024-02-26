@@ -211,7 +211,8 @@ Generated 3 sub questions.
 [pg_essay] A: During his time at YC, Paul Graham worked on various projects. He wrote all of YC's internal software in Arc and also worked on Hacker News (HN), which was a news aggregator initially meant for startup founders but later changed to engage intellectual curiosity. Additionally, he wrote essays and worked on helping the startups in the YC program with their problems.
 [pg_essay] A: Paul Graham worked on writing essays and working on YC before YC.
 ```
-## Finetune Embeddings微调嵌入带来的性能提升
+
+### Finetune Embeddings微调嵌入带来的性能提升
 我们可以使用LlamaIndex的generate_qa_embedding_pairs把数据集存储到EmbeddingQAFinetuneDataset
 ```
 # 生成语料库
@@ -290,9 +291,47 @@ hit_rate_finetuned
 evaluate_st(val_dataset, "llm_model_ft", name="finetuned")
 ```
 
+### Setence Windows Retrieval （句子窗口检索）带来的性能提升
+LlamaIndex框架中的SentenceWindowNodeParser是一种用于将文档分割成句子的解析器，其底层原理基于自然语言处理（NLP）技术，特别是分句技术。这种解析器通常利用正则表达式、自然语言处理库（例如NLTK或spaCy）等方法来识别文本中的句子边界。
+在具体的实现过程中，SentenceWindowNodeParser通过分析文本中的标点符号、特殊字符以及单词的排列来判定句子的结束位置。例如，句号（.）、问号（？）、感叹号（！）等标点符号通常是句子结束的标识。除此之外，该解析器还可能考虑到半角和全角的标点符号使用差异，因为在中文文档中常常使用全角的标点符号，而在英文或其他西方语言中通常使用半角的标点符号。
+SentenceWindowNodeParser不仅将文本分割成句子，还将每个句子视为一个独立的“节点”（Node），每个节点包含了自身的文本内容和一些元数据信息，如句子的ID、父节点的引用、前置和后续的句子等。这些信息有助于在检索和生成回复时，能够提供更大的上下文环境。
+​LlamaIndex的从小到大的检索中我们都是按指定的块大小(chunk_size)来对文档进行切割的，然而“句子-窗口检索”方法中我们将不再按chunk_size来切割文档，而是按完整的句子来切割文档即每一个句子切割成一个文档，然而如何识别出文本中的句子呢？在LlamaIndx中采样的是通过句尾的标点符号如句号(.), 问号(?), 感叹号(!)等来识别句子。
+Setence Windows Retrieval根据查询找到最相关的句子，然后根据这个句子周围的窗口添加上下文，然后将该上下文内容用于LLM，因为我们最想找的信息很有可能就在这个上下文中。
+```
+from llama_index.node_parser import SentenceWindowNodeParser
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+ 
+#定义句子解析器
+# create the sentence window node parser w/ default settings
+self.node_parser = SentenceWindowNodeParser.from_defaults(
+    window_size=3,
+    window_metadata_key="window",
+    original_text_metadata_key="original_text",
+)
 
+self.llm = OpenAI(model="gpt-3.5-turbo", temperature=0.1)
+self.embed_model = HuggingFaceEmbedding(
+    model_name="sentence-transformers/all-mpnet-base-v2", max_length=512
+)
+self.service_context = ServiceContext.from_defaults(
+    llm=self.llm,
+    embed_model=self.embed_model,
+)
+# extract nodes
+nodes = self.node_parser.get_nodes_from_documents(docs)
+self.sentence_index = VectorStoreIndex(
+    nodes, service_context=self.service_context
+)
+self.postprocessor = MetadataReplacementPostProcessor(
+    target_metadata_key="window"
+)
+self.query_engine = self.sentence_index.as_query_engine(
+    similarity_top_k=2,
+    # the target key defaults to `window` to match the node_parser's default
+    node_postprocessors=[self.postprocessor],
+)
 
-
+```
 
 
 
